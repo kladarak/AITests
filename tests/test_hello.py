@@ -3,7 +3,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import unittest
-from my_python_package.hello import print_hello
+from ai_experiments.hello import print_hello
 import logging
 
 class TestHello(unittest.TestCase):

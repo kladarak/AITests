@@ -1,6 +1,6 @@
-# my_python_package/my_python_package/README.md
+# ai_experiments/README.md
 
-# My Python Package
+# AI Experiments
 
 This is a simple Python package that demonstrates how to print "Hello World" to the log.
 
@@ -9,7 +9,7 @@ This is a simple Python package that demonstrates how to print "Hello World" to 
 You can install the package using pip:
 
 ```
-pip install my_python_package
+pip install ai_experiments
 ```
 
 ## Usage
@@ -17,7 +17,7 @@ pip install my_python_package
 To use the package, you can import it and call the `print_hello` function:
 
 ```python
-from my_python_package.hello import print_hello
+from ai_experiments.hello import print_hello
 
 print_hello()
 ```
