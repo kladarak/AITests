@@ -1,0 +1,35 @@
+import pygame
+from .scene_object import SceneObject
+
+class Scene:
+    def __init__(self, assets_dir, data_manager):
+        self.assets_dir = assets_dir
+        self.data_manager = data_manager
+        self.objects = self.load_objects()
+        self.background = pygame.image.load(str(self.assets_dir / "astronomy_tower.jpeg"))
+        self.bg_width, self.bg_height = self.background.get_size()
+
+    def load_objects(self):
+        image_paths = list((self.assets_dir / "items").glob("*.png")) + list((self.assets_dir / "potions").glob("*.png"))
+        objects = {}
+        for img_path in image_paths:
+            key = img_path.stem
+            obj_data = self.data_manager.get_object_data(key, {"x": 0, "y": 0, "width": 100, "height": 100})
+            objects[key] = SceneObject(key, img_path, obj_data)
+        return objects
+
+    def draw(self, surface):
+        surface.blit(self.background, (0, 0))
+        for obj in self.objects.values():
+            obj.draw(surface)
+
+    def get_object_at_pos(self, pos):
+        for key, obj in self.objects.items():
+            if obj.rect.collidepoint(pos):
+                return key, obj
+        return None, None
+
+    def update_object(self, key):
+        obj = self.objects[key]
+        obj.update_image()
+        self.data_manager.update_object(key, obj.rect)
