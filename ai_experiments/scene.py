@@ -1,20 +1,21 @@
 import pygame
 from .scene_object import SceneObject
+from .constants import CONSTANTS
 
 class Scene:
     def __init__(self, assets_dir, data_manager):
         self.assets_dir = assets_dir
         self.data_manager = data_manager
         self.objects = self.load_objects()
-        self.background = pygame.image.load(str(self.assets_dir / "astronomy_tower.jpeg"))
+        self.background = pygame.image.load(str(CONSTANTS.BACKGROUND_IMAGE))
         self.bg_width, self.bg_height = self.background.get_size()
 
     def load_objects(self):
-        image_paths = list((self.assets_dir / "items").glob("*.png")) + list((self.assets_dir / "potions").glob("*.png"))
+        image_paths = list(CONSTANTS.ITEMS_DIR.glob("*.png")) + list(CONSTANTS.POTIONS_DIR.glob("*.png"))
         objects = {}
         for img_path in image_paths:
             key = img_path.stem
-            obj_data = self.data_manager.get_object_data(key, {"x": 0, "y": 0, "width": 100, "height": 100})
+            obj_data = self.data_manager.get_object_data(key, CONSTANTS.OBJECT_DEFAULT)
             objects[key] = SceneObject(key, img_path, obj_data)
         return objects
 
