@@ -3,15 +3,18 @@ from pathlib import Path
 
 def run_game():
     pygame.init()
-    screen = pygame.display.set_mode((640, 480))
-    pygame.display.set_caption("Point and Click Demo")
 
     # Set up asset paths using pathlib
     assets_dir = Path(__file__).parent / "assets"
     background_img = pygame.image.load(str(assets_dir / "astronomy_tower.jpeg"))
-    # character_img = pygame.image.load(str(assets_dir / "character.png"))
+    bg_width, bg_height = background_img.get_size()
 
-    # character_pos = [100, 300]  # Example position
+    screen = pygame.display.set_mode((bg_width, bg_height))
+    pygame.display.set_caption("Point and Click Demo")
+
+    books_img = pygame.image.load(str(assets_dir / "books.png"))
+    books_img = pygame.transform.scale(books_img, (100, 100))
+    books_pos = (300, 350)
 
     running = True
     while running:
@@ -21,7 +24,8 @@ def run_game():
 
         # Draw background
         screen.blit(background_img, (0, 0))
-        # screen.blit(character_img, character_pos)
+        # Draw books item
+        screen.blit(books_img, books_pos)
         pygame.display.flip()
 
     pygame.quit()
