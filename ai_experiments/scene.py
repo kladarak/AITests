@@ -19,10 +19,10 @@ class Scene:
             objects[key] = SceneObject(key, img_path, obj_data)
         return objects
 
-    def draw(self, surface):
+    def draw(self, surface, current_time=None):
         surface.blit(self.background, (0, 0))
         for obj in self.objects.values():
-            obj.draw(surface)
+            obj.draw(surface, current_time=current_time)
 
     def get_object_at_pos(self, pos):
         for key, obj in self.objects.items():
@@ -44,3 +44,4 @@ class Scene:
             obj.found = False
             obj.animating = False
             obj.animation_progress = 0
+            obj.wiggling = False
