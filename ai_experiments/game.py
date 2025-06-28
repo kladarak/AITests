@@ -9,38 +9,36 @@ def run_game():
     assets_dir = Path(__file__).parent / "assets"
     data_file = assets_dir / "scene_data.json"
 
+    # Find all PNG files in assets/items and assets/potions
+    image_paths = list((assets_dir / "items").glob("*.png")) + list((assets_dir / "potions").glob("*.png"))
+
     # Load scene data from JSON
     if data_file.exists():
         with open(data_file, "r") as f:
             scene_data = json.load(f)
     else:
-        # Default values if file doesn't exist
-        scene_data = {
-            "books": {
-                "x": 300,
-                "y": 350,
-                "width": 100,
-                "height": 100
-            }
-        }
+        scene_data = {}
 
+    # Load background
     background_img = pygame.image.load(str(assets_dir / "astronomy_tower.jpeg"))
     bg_width, bg_height = background_img.get_size()
-
     screen = pygame.display.set_mode((bg_width, bg_height))
     pygame.display.set_caption("Point and Click Demo")
 
-    books_img = pygame.image.load(str(assets_dir / "books.png"))
-    books_img = pygame.transform.scale(
-        books_img, (scene_data["books"]["width"], scene_data["books"]["height"])
-    )
-    books_rect = books_img.get_rect(
-        topleft=(scene_data["books"]["x"], scene_data["books"]["y"])
-    )
+    # Load all images and their rects
+    objects = {}
+    for img_path in image_paths:
+        key = img_path.stem  # filename without extension
+        # Get data or default
+        obj_data = scene_data.get(key, {"x": 0, "y": 0, "width": 100, "height": 100})
+        img = pygame.image.load(str(img_path))
+        img = pygame.transform.scale(img, (obj_data["width"], obj_data["height"]))
+        rect = img.get_rect(topleft=(obj_data["x"], obj_data["y"]))
+        objects[key] = {"img_path": img_path, "img": img, "rect": rect}
 
     font = pygame.font.SysFont(None, 24)
 
-    dragging = False
+    dragging_key = None
     offset_x = 0
     offset_y = 0
     resized = False
@@ -51,54 +49,71 @@ def run_game():
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                if books_rect.collidepoint(event.pos):
-                    dragging = True
-                    mouse_x, mouse_y = event.pos
-                    offset_x = books_rect.x - mouse_x
-                    offset_y = books_rect.y - mouse_y
+                for key, obj in objects.items():
+                    if obj["rect"].collidepoint(event.pos):
+                        dragging_key = key
+                        mouse_x, mouse_y = event.pos
+                        offset_x = obj["rect"].x - mouse_x
+                        offset_y = obj["rect"].y - mouse_y
+                        break
             elif event.type == pygame.MOUSEBUTTONUP:
-                if dragging:
+                if dragging_key:
                     # Save new position to JSON on drop
-                    scene_data["books"]["x"] = books_rect.x
-                    scene_data["books"]["y"] = books_rect.y
+                    obj = objects[dragging_key]
+                    scene_data[dragging_key] = {
+                        "x": obj["rect"].x,
+                        "y": obj["rect"].y,
+                        "width": obj["rect"].width,
+                        "height": obj["rect"].height
+                    }
                     with open(data_file, "w") as f:
                         json.dump(scene_data, f, indent=4)
-                dragging = False
-            elif event.type == pygame.MOUSEMOTION and dragging:
+                dragging_key = None
+            elif event.type == pygame.MOUSEMOTION and dragging_key:
                 mouse_x, mouse_y = event.pos
-                books_rect.x = mouse_x + offset_x
-                books_rect.y = mouse_y + offset_y
-            elif event.type == pygame.KEYDOWN:
+                obj = objects[dragging_key]
+                obj["rect"].x = mouse_x + offset_x
+                obj["rect"].y = mouse_y + offset_y
+            elif event.type == pygame.KEYDOWN and dragging_key:
+                obj = objects[dragging_key]
                 # Resize with up/down arrows for quick scene setup
                 if event.key == pygame.K_UP:
-                    books_rect.width += 5
-                    books_rect.height += 5
+                    obj["rect"].width += 5
+                    obj["rect"].height += 5
                     resized = True
-                elif event.key == pygame.K_DOWN and books_rect.width > 10 and books_rect.height > 10:
-                    books_rect.width -= 5
-                    books_rect.height -= 5
+                elif event.key == pygame.K_DOWN and obj["rect"].width > 10 and obj["rect"].height > 10:
+                    obj["rect"].width -= 5
+                    obj["rect"].height -= 5
                     resized = True
 
         # If resized, update image and save to JSON
-        if resized:
-            books_img = pygame.image.load(str(assets_dir / "books.png"))
-            books_img = pygame.transform.scale(books_img, (books_rect.width, books_rect.height))
-            scene_data["books"]["width"] = books_rect.width
-            scene_data["books"]["height"] = books_rect.height
+        if resized and dragging_key:
+            obj = objects[dragging_key]
+            obj["img"] = pygame.image.load(str(obj["img_path"]))
+            obj["img"] = pygame.transform.scale(obj["img"], (obj["rect"].width, obj["rect"].height))
+            scene_data[dragging_key] = {
+                "x": obj["rect"].x,
+                "y": obj["rect"].y,
+                "width": obj["rect"].width,
+                "height": obj["rect"].height
+            }
             with open(data_file, "w") as f:
                 json.dump(scene_data, f, indent=4)
             resized = False
 
         # Draw background
         screen.blit(background_img, (0, 0))
-        # Draw books item
-        screen.blit(books_img, books_rect.topleft)
+        # Draw all objects
+        for key, obj in objects.items():
+            screen.blit(obj["img"], obj["rect"].topleft)
 
-        # Draw position in top right corner
-        pos_text = f"({books_rect.x}, {books_rect.y}) {books_rect.width}x{books_rect.height}"
-        text_surf = font.render(pos_text, True, (255, 255, 255))
-        text_rect = text_surf.get_rect(topright=(bg_width - 10, 10))
-        screen.blit(text_surf, text_rect)
+        # Draw position and size of dragged object in top right corner
+        if dragging_key:
+            obj = objects[dragging_key]
+            pos_text = f"{dragging_key}: ({obj['rect'].x}, {obj['rect'].y}) {obj['rect'].width}x{obj['rect'].height}"
+            text_surf = font.render(pos_text, True, (255, 255, 255))
+            text_rect = text_surf.get_rect(topright=(bg_width - 10, 10))
+            screen.blit(text_surf, text_rect)
 
         pygame.display.flip()
 
