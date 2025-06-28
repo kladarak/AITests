@@ -8,4 +8,6 @@ version = "0.1.0"
 description = "A simple Python package that prints 'Hello World' to the log."
 authors = [{name = "Your Name", email = "your.email@example.com"}]
 license = "MIT"
-dependencies = []
+dependencies = [
+    "pygame"
+]

@@ -6,10 +6,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Run my_python_package as module",
+            "name": "Run ai_experiments as module",
             "type": "debugpy",
             "request": "launch",
-            "module": "my_python_package",
+            "module": "ai_experiments",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal"
         }
