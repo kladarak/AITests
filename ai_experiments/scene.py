@@ -26,7 +26,7 @@ class Scene:
 
     def get_object_at_pos(self, pos):
         for key, obj in self.objects.items():
-            if obj.rect.collidepoint(pos):
+            if not obj.found and obj.rect.collidepoint(pos):
                 return key, obj
         return None, None
 
@@ -34,3 +34,13 @@ class Scene:
         obj = self.objects[key]
         obj.update_image()
         self.data_manager.update_object(key, obj.rect)
+
+    def update_animations(self):
+        for obj in self.objects.values():
+            obj.update_animation()
+
+    def reset_all(self):
+        for obj in self.objects.values():
+            obj.found = False
+            obj.animating = False
+            obj.animation_progress = 0
