@@ -7,97 +7,108 @@ from .scene import Scene
 from .scene_editor import SceneEditor
 from .ui import UICheckbox, UICounter, UITimer, UIWellDone
 
-def reset_wiggle_interval():
-    """Helper to reset wiggle interval."""
-    return random.randint(20, 30)
+class WiggleTimer:
+    def __init__(self):
+        self.reset(time.time())
 
-def run_game():
-    pygame.init()
-    assets_dir = CONSTANTS.ASSETS_DIR
-    data_file = CONSTANTS.DATA_FILE
-    data_manager = SceneDataManager(data_file)
-    scene = Scene(assets_dir, data_manager)
-    editor = SceneEditor(scene)
-    screen = pygame.display.set_mode((scene.bg_width, scene.bg_height))
-    pygame.display.set_caption("Point and Click Demo")
-    font = pygame.font.SysFont(None, CONSTANTS.FONT_SIZE)
+    def reset(self, now):
+        self.last_found_time = now
+        self.interval = random.randint(20, 30)
 
-    editor_mode = False
-    game_won = False
+    def should_wiggle(self, now):
+        return (now - self.last_found_time) > self.interval
 
-    running = True
-    clock = pygame.time.Clock()
+class Game:
+    def __init__(self):
+        pygame.init()
+        self.assets_dir = CONSTANTS.ASSETS_DIR
+        self.data_file = CONSTANTS.DATA_FILE
+        self.data_manager = SceneDataManager(self.data_file)
+        self.scene = Scene(self.assets_dir, self.data_manager)
+        self.editor = SceneEditor(self.scene)
+        self.screen = pygame.display.set_mode((self.scene.bg_width, self.scene.bg_height))
+        pygame.display.set_caption("Point and Click Demo")
+        self.font = pygame.font.SysFont(None, CONSTANTS.FONT_SIZE)
+        self.editor_mode = False
+        self.game_won = False
+        self.running = True
+        self.clock = pygame.time.Clock()
+        self.start_time = time.time()
+        self.current_time = self.start_time
+        self.elapsed_time = 0
+        self.time_since_found = 0
+        self.wiggle_timer = WiggleTimer()
 
-    start_time = time.time()
-    last_found_time = start_time
-    wiggle_interval = reset_wiggle_interval()
-
-    while running:
-        current_time = time.time()
-        elapsed_time = current_time - start_time
-        time_since_found = current_time - last_found_time
-
+    def handle_input(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
+                self.running = False
             checkbox_rect = pygame.Rect(*CONSTANTS.CHECKBOX_POS, *CONSTANTS.CHECKBOX_SIZE)
             if event.type == pygame.MOUSEBUTTONDOWN and checkbox_rect.collidepoint(event.pos):
-                editor_mode = not editor_mode
-            elif editor_mode:
-                editor.handle_event(event)
-            elif not editor_mode and not game_won:
+                self.editor_mode = not self.editor_mode
+            elif self.editor_mode:
+                self.editor.handle_event(event)
+            elif not self.editor_mode and not self.game_won:
                 # Game mode: check for item clicks
-                key, obj = scene.get_object_at_pos(event.pos) if event.type == pygame.MOUSEBUTTONDOWN else (None, None)
+                key, obj = self.scene.get_object_at_pos(event.pos) if event.type == pygame.MOUSEBUTTONDOWN else (None, None)
                 if obj:
                     obj.start_animation()
-                    last_found_time = current_time
-                    wiggle_interval = reset_wiggle_interval()
+                    self.wiggle_timer.reset(self.current_time)
             # Handle restart button
-            if game_won and event.type == pygame.MOUSEBUTTONDOWN:
-                btn_rect = pygame.Rect(scene.bg_width // 2 - 60, scene.bg_height // 2 + 10, 120, 40)
+            if self.game_won and event.type == pygame.MOUSEBUTTONDOWN:
+                btn_rect = pygame.Rect(self.scene.bg_width // 2 - 60, self.scene.bg_height // 2 + 10, 120, 40)
                 if btn_rect.collidepoint(event.pos):
-                    scene.reset_all()
-                    game_won = False
-                    start_time = time.time()
-                    last_found_time = start_time
-                    wiggle_interval = reset_wiggle_interval()
+                    self.scene.reset_all()
+                    self.game_won = False
+                    self.start_time = time.time()
+                    self.wiggle_timer.reset(self.start_time)
 
-        if editor_mode:
-            editor.update()
+    def update(self):
+        self.current_time = time.time()
+        self.elapsed_time = self.current_time - self.start_time
+        self.time_since_found = self.current_time - self.wiggle_timer.last_found_time
+
+        if self.editor_mode:
+            self.editor.update()
         else:
-            scene.update_animations()
-
+            self.scene.update_animations()
             # Wiggle logic
-            if not game_won:
-                if time_since_found > wiggle_interval:
-                    # Pick a random unfound item to wiggle
-                    unfound = [k for k, o in scene.objects.items() if not o.found]
+            if not self.game_won:
+                if self.wiggle_timer.should_wiggle(self.current_time):
+                    unfound = [k for k, o in self.scene.objects.items() if not o.found]
                     if unfound:
                         wiggle_key = random.choice(unfound)
-                        scene.objects[wiggle_key].start_wiggle(current_time)
-                        wiggle_interval = reset_wiggle_interval()
-                        last_found_time = current_time  # Reset timer after wiggle
-                # No need to handle wiggle drawing here; handled in SceneObject.draw
+                        self.scene.objects[wiggle_key].start_wiggle(self.current_time)
+                        self.wiggle_timer.reset(self.current_time)
 
-        scene.draw(screen, current_time=current_time)
-        UICheckbox.draw(screen, editor_mode, font)
+    def render(self):
+        self.scene.draw(self.screen, current_time=self.current_time)
+        UICheckbox.draw(self.screen, self.editor_mode, self.font)
 
         # Game mode UI
-        if not editor_mode:
-            remaining = sum(1 for obj in scene.objects.values() if not obj.found)
-            UICounter.draw(screen, remaining, font)
-            UITimer.draw(screen, elapsed_time, font)
+        if not self.editor_mode:
+            remaining = sum(1 for obj in self.scene.objects.values() if not obj.found)
+            UICounter.draw(self.screen, remaining, self.font)
+            UITimer.draw(self.screen, self.elapsed_time, self.font)
             if remaining == 0:
-                game_won = True
-                btn_rect = UIWellDone.draw(screen, font, scene)
+                self.game_won = True
+                UIWellDone.draw(self.screen, self.font, self.scene)
         # Editor mode UI
-        if editor_mode:
-            editor.draw_status(screen, font)
+        if self.editor_mode:
+            self.editor.draw_status(self.screen, self.font)
 
         pygame.display.flip()
-        clock.tick(60)
+        self.clock.tick(60)
 
-    pygame.quit()
+    def run(self):
+        while self.running:
+            self.handle_input()
+            self.update()
+            self.render()
+        pygame.quit()
+
+def run_game():
+    Game().run()
 
 if __name__ == "__main__":
     run_game()
