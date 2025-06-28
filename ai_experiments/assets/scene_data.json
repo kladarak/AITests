@@ -1,63 +1,63 @@
 {
     "books": {
-        "x": 404,
-        "y": 456,
+        "x": 396,
+        "y": 452,
         "width": 100,
         "height": 100
     },
     "telescope": {
-        "x": 248,
-        "y": 60,
+        "x": 271,
+        "y": 482,
         "width": 100,
         "height": 100
     },
     "potions (1)": {
-        "x": 61,
-        "y": 253,
-        "width": 100,
-        "height": 100
+        "x": 26,
+        "y": 211,
+        "width": 45,
+        "height": 45
     },
     "potions (10)": {
-        "x": 386,
-        "y": 223,
-        "width": 100,
-        "height": 100
+        "x": 565,
+        "y": 502,
+        "width": 50,
+        "height": 50
     },
     "potions (2)": {
-        "x": 165,
-        "y": 369,
-        "width": 100,
-        "height": 100
+        "x": 230,
+        "y": 195,
+        "width": 45,
+        "height": 45
     },
     "potions (3)": {
-        "x": 229,
-        "y": 216,
-        "width": 100,
-        "height": 100
+        "x": 582,
+        "y": 318,
+        "width": 40,
+        "height": 40
     },
     "potions (4)": {
-        "x": 430,
-        "y": 37,
-        "width": 100,
-        "height": 100
+        "x": 400,
+        "y": 383,
+        "width": 30,
+        "height": 30
     },
     "potions (5)": {
-        "x": 140,
-        "y": 36,
-        "width": 100,
-        "height": 100
+        "x": 527,
+        "y": 153,
+        "width": 50,
+        "height": 50
     },
     "potions (6)": {
-        "x": 326,
-        "y": 441,
-        "width": 100,
-        "height": 100
+        "x": 136,
+        "y": 409,
+        "width": 55,
+        "height": 55
     },
     "potions (7)": {
-        "x": 51,
-        "y": 472,
-        "width": 100,
-        "height": 100
+        "x": 14,
+        "y": 305,
+        "width": 45,
+        "height": 45
     },
     "potions (8)": {
         "x": 507,
@@ -66,9 +66,9 @@
         "height": 100
     },
     "potions (9)": {
-        "x": 187,
-        "y": 519,
-        "width": 100,
-        "height": 100
+        "x": 460,
+        "y": 349,
+        "width": 55,
+        "height": 55
     }
 }
