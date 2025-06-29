@@ -13,12 +13,14 @@ class WiggleTimer:
 
     def reset(self, now):
         self.last_found_time = now
-        self.interval = random.randint(20, 30)
+        self.interval = random.randint(CONSTANTS.WIGGLE_MIN_SECONDS, CONSTANTS.WIGGLE_MAX_SECONDS)
 
     def should_wiggle(self, now):
         return (now - self.last_found_time) > self.interval
 
 class Game:
+    INVENTORY_HEIGHT = CONSTANTS.INVENTORY_HEIGHT
+
     def __init__(self):
         pygame.init()
         self.assets_dir = CONSTANTS.ASSETS_DIR
@@ -26,7 +28,10 @@ class Game:
         self.data_manager = SceneDataManager(self.data_file)
         self.scene = Scene(self.assets_dir, self.data_manager)
         self.editor = SceneEditor(self.scene)
-        self.screen = pygame.display.set_mode((self.scene.bg_width, self.scene.bg_height))
+        # Extend window height for inventory
+        self.screen = pygame.display.set_mode(
+            (self.scene.bg_width, self.scene.bg_height + self.INVENTORY_HEIGHT)
+        )
         pygame.display.set_caption("Point and Click Demo")
         self.font = pygame.font.SysFont(None, CONSTANTS.FONT_SIZE)
         self.editor_mode = False
@@ -56,7 +61,12 @@ class Game:
                     self.wiggle_timer.reset(self.current_time)
             # Handle restart button
             if self.game_won and event.type == pygame.MOUSEBUTTONDOWN:
-                btn_rect = pygame.Rect(self.scene.bg_width // 2 - 60, self.scene.bg_height // 2 + 10, 120, 40)
+                btn_rect = pygame.Rect(
+                    self.scene.bg_width // 2 - CONSTANTS.RESTART_BTN_OFFSET_X,
+                    self.scene.bg_height // 2 + CONSTANTS.RESTART_BTN_OFFSET_Y,
+                    CONSTANTS.RESTART_BTN_WIDTH,
+                    CONSTANTS.RESTART_BTN_HEIGHT
+                )
                 if btn_rect.collidepoint(event.pos):
                     self.scene.reset_all()
                     self.game_won = False
@@ -81,7 +91,33 @@ class Game:
                         self.scene.objects[wiggle_key].start_wiggle(self.current_time)
                         self.wiggle_timer.reset(self.current_time)
 
+    def render_inventory(self):
+        # Draw black background for inventory
+        inv_rect = pygame.Rect(0, self.scene.bg_height, self.scene.bg_width, self.INVENTORY_HEIGHT)
+        pygame.draw.rect(self.screen, (0, 0, 0), inv_rect)
+
+        # Draw found items as icons in a 2-row grid
+        found_objs = [obj for obj in self.scene.objects.values() if obj.found]
+        rows = CONSTANTS.INVENTORY_ROWS
+        padding = CONSTANTS.INVENTORY_PADDING
+        icon_height = (self.INVENTORY_HEIGHT - (rows + 1) * padding) // rows
+        icon_width = icon_height  # Make icons square
+
+        # Calculate how many columns fit
+        cols = max(1, (self.scene.bg_width - padding) // (icon_width + padding))
+
+        for idx, obj in enumerate(found_objs):
+            row = idx // cols
+            col = idx % cols
+            if row >= rows:
+                break  # Don't draw more than fits in the grid
+            x = padding + col * (icon_width + padding)
+            y = self.scene.bg_height + padding + row * (icon_height + padding)
+            icon = pygame.transform.scale(obj.image, (icon_width, icon_height))
+            self.screen.blit(icon, (x, y))
+
     def render(self):
+        # Draw main scene
         self.scene.draw(self.screen, current_time=self.current_time)
         UICheckbox.draw(self.screen, self.editor_mode, self.font)
 
@@ -96,6 +132,9 @@ class Game:
         # Editor mode UI
         if self.editor_mode:
             self.editor.draw_status(self.screen, self.font)
+
+        # Draw inventory section
+        self.render_inventory()
 
         pygame.display.flip()
         self.clock.tick(60)

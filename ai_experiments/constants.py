@@ -11,3 +11,18 @@ class CONSTANTS:
     CHECKBOX_LABEL = "Editor Mode"
     OBJECT_DEFAULT = {"x": 0, "y": 0, "width": 100, "height": 100}
     FONT_SIZE = 24
+
+    # Inventory
+    INVENTORY_HEIGHT = 100
+    INVENTORY_ROWS = 2
+    INVENTORY_PADDING = 10
+
+    # Wiggle
+    WIGGLE_MIN_SECONDS = 20
+    WIGGLE_MAX_SECONDS = 30
+
+    # Restart button
+    RESTART_BTN_WIDTH = 120
+    RESTART_BTN_HEIGHT = 40
+    RESTART_BTN_OFFSET_X = 60
+    RESTART_BTN_OFFSET_Y = 10
